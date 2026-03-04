@@ -14,19 +14,26 @@
 
 1. 在 notebook 中新建代码单元格
 2. 导入所需库并设置中文显示：
+   - `from oxq.core import Engine, Strategy`
    - `from oxq.data import YFinanceDownloader, LocalMarketDataProvider`
-   - pandas, matplotlib.pyplot, numpy
+   - `from oxq.indicators import SMA`
+   - `from oxq.signals import Crossover`
+   - `from oxq.rules import FullPositionEntryRule, ExitRule`
+   - `from oxq.trade import SimBroker`
+   - `from oxq.universe import StaticUniverse`
+   - pandas, matplotlib.pyplot
    - 设置 matplotlib 中文显示支持（macOS: Arial Unicode MS / STHeiti, Windows: SimHei, `axes.unicode_minus = False`）
 3. 使用 `YFinanceDownloader` 和 `LocalMarketDataProvider`
 4. 下载沪深300ETF（`510300.SS`）最近 3 年数据（起始日期为 3 年前，结束日期为当天）
 5. 下载 5 只 A 股标的最近 3 年数据：`["600519.SS", "000858.SZ", "601318.SS", "000001.SZ", "600036.SS"]`（茅台、五粮液、中国平安、平安银行、招商银行）
-6. 实现一个简单的均线策略回测函数 `simple_ma_backtest(bars, ma_period=20)`：
-   - 输入：open-xquant 返回的 DataFrame（含 close 列）
-   - 计算 N 日均线
-   - 规则：收盘价上穿均线买入，下穿均线卖出
-   - 返回最终收益率
-7. 对 5 只个股 + 沪深300ETF 分别运行回测
-8. 画一张横向柱状图（figsize 10×5）：6 个标的的收益率对比，沪深300ETF 用蓝色高亮，其余按正负区分绿色/红色
+6. 对每个标的（5 只个股 + 沪深300ETF），构建一个 Strategy 并用 Engine 运行回测：
+   - 指标：`SMA(period=1)`（即收盘价）和 `SMA(period=20)`
+   - 信号：`Crossover(fast="sma_1", slow="sma_20")`——SMA(1) 上穿 SMA(20) 等价于收盘价上穿 20 日均线
+   - 入场：`FullPositionEntryRule`（全仓买入）
+   - 出场：`ExitRule(fast="sma_1", slow="sma_20")`
+   - `router` 和 `receiver` 使用同一个 `SimBroker()` 实例
+   - 用 `result.total_return()` 获取收益率
+7. 画一张横向柱状图（figsize 10×5）：6 个标的的收益率对比，沪深300ETF 用蓝色高亮，其余按正负区分绿色/红色
 
 ## 结果呈现
 

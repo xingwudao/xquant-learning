@@ -16,25 +16,26 @@
 ## 要求
 
 1. 在 notebook 中新建代码单元格
-2. 使用 `YFinanceDownloader` 下载黄金 ETF（GLD）最近 5 年数据（起始日期 `2021-01-01`，结束日期为当天）
-3. 使用 `LocalMarketDataProvider` 读取三只 ETF 的数据（510300.SS、QQQ、GLD）
-4. 将三只 ETF 的收盘价合并为一个 DataFrame，列名改为中文：`{"510300.SS": "沪深300", "QQQ": "纳指100", "GLD": "黄金"}`
-5. 计算日收益率（pct_change），然后计算相关性矩阵
-6. 画相关性热力图（figsize 8×6）：
+2. 导入 `numpy`（年化波动率计算需要）
+3. 使用 `YFinanceDownloader` 下载黄金 ETF（GLD）最近 5 年数据（起始日期 `2021-01-01`，结束日期为当天）
+4. 使用 `LocalMarketDataProvider().get_bars(symbol, start, end)` 读取三只 ETF 的数据（510300.SS、QQQ、GLD）
+5. 将三只 ETF 的收盘价合并为一个 DataFrame，列名改为中文：`{"510300.SS": "沪深300", "QQQ": "纳指100", "GLD": "黄金"}`
+6. 计算日收益率（pct_change），然后计算相关性矩阵
+7. 画相关性热力图（figsize 8×6）：
    - 使用 matplotlib 的 imshow
    - 在每个格子中标注相关系数数值（保留 2 位小数）
    - 使用 coolwarm 色系
    - 标题「三资产日收益率相关性」
-7. 对比实验——组合 vs 单押：
+8. 对比实验——组合 vs 单押：
    - 单押方案：100% 沪深300
    - 等权组合：沪深300、纳指100、黄金各 1/3
    - 计算两种方案的日收益率序列
    - 计算并对比：累计收益率、年化波动率、最大回撤
-8. 画两条累计收益率曲线对比图（figsize 12×6）：
+9. 画两条累计收益率曲线对比图（figsize 12×6）：
    - 单押沪深300（灰色虚线）vs 等权三资产组合（实线）
    - 图例标注方案名称
    - 标题「单押沪深300 vs 三资产等权组合」
-9. 使用 open-xquant 构建投资宇宙：
+10. 使用 open-xquant 构建投资宇宙：
    ```python
    from oxq.universe import StaticUniverse
    universe = StaticUniverse(

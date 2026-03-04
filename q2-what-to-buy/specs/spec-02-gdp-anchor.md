@@ -40,7 +40,7 @@
 6. 使用 open-xquant 下载两个对应的 ETF 最近 5 年数据（起始日期 `2021-01-01`，结束日期为当天）：
    - `YFinanceDownloader` 下载 `510300.SS`（沪深300ETF，代表中国核心资产）
    - `YFinanceDownloader` 下载 `QQQ`（纳斯达克100ETF，代表美国科技成长）
-7. 使用 `LocalMarketDataProvider` 读取数据，画出两只 ETF 的归一化价格走势对比图（figsize 12×6）：
+7. 使用 `LocalMarketDataProvider().get_bars(symbol, start, end)` 读取数据，画出两只 ETF 的归一化价格走势对比图（figsize 12×6）：
    - 将两只 ETF 的收盘价都归一化到起点 = 100
    - 两条线不同颜色，图例标注中文名称
    - 标题「沪深300 vs 纳斯达克100 归一化走势」
