@@ -39,7 +39,7 @@
 5. 打印分析说明：中美两国 GDP 远超其他国家，合计占全球 GDP 的约 40%
 6. 使用 open-xquant 下载两个对应的 ETF 最近 5 年数据（起始日期 `2021-01-01`，结束日期为当天）：
    - `YFinanceDownloader` 下载 `510300.SS`（沪深300ETF，代表中国核心资产）
-   - `YFinanceDownloader` 下载 `QQQ`（纳斯达克100ETF，代表美国科技成长）
+   - `YFinanceDownloader` 下载 `513100.SS`（纳指100ETF，A股上市，跟踪纳斯达克100指数）
 7. 使用 `LocalMarketDataProvider().get_bars(symbol, start, end)` 读取数据，画出两只 ETF 的归一化价格走势对比图（figsize 12×6）：
    - 将两只 ETF 的收盘价都归一化到起点 = 100
    - 两条线不同颜色，图例标注中文名称

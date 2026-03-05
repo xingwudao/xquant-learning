@@ -19,12 +19,13 @@
 1. 阅读以下 oxq 模块的源码，了解接口的输入、输出和参数含义：
    - `oxq.signals.TopNRanking`
    - `oxq.indicators.Momentum`
+   - `oxq.indicators.Ratio`
 
-2. 为每只 ETF 预计算 20 日动量。
+2. 为每只 ETF 预计算 20 日动量，并用 `Ratio` 计算风险调整动量（ram = mom / vol）。
 
-3. 用 `TopNRanking` 信号计算权重（score 使用动量列，选 Top 3，过滤动量为负的标的）。打印三种信号的权重对比（取最新一天）。
+3. 用 `TopNRanking` 信号计算权重（score 使用 ram 列，选 Top 3，过滤 ram 为负的标的）。打印三种信号的权重对比（取最新一天）。
 
-4. 组装动量排名策略并运行回测（复用 COMMON 字典，indicators 中需额外加入 Momentum）。
+4. 组装动量排名策略并运行回测（复用 COMMON 字典，indicators 中需额外加入 Momentum 和 Ratio）。
 
 5. 打印三种方案的指标对比表（累计收益率、年化波动率、最大回撤）。
 
@@ -32,7 +33,7 @@
    - 等权组合（灰色虚线）
    - 风险平价组合（蓝色实线）
    - 动量排名组合（橙色实线）
-   - 归一化到起点 = 100，仅取三个市场共同交易日
+   - 归一化到起点 = 100
    - 标题「三种信号对比：等权 vs 风险平价 vs 动量排名」
 
 7. 画动量排名的权重变化历史图（figsize 12×4）：

@@ -5,7 +5,7 @@
 ## 上下文
 
 在 `q2-what-to-buy.ipynb` 中已有：
-- 沪深300ETF（510300.SS）和纳斯达克100ETF（QQQ）的历史数据
+- 沪深300ETF（510300.SS）和纳指100ETF（513100.SS）的历史数据
 - 学员已通过 GDP 数据锁定中美
 - 当前问题：中美都是股市，可能同涨同跌，加什么能保护组合？
 
@@ -17,9 +17,9 @@
 
 1. 在 notebook 中新建代码单元格
 2. 导入 `numpy`（年化波动率计算需要）
-3. 使用 `YFinanceDownloader` 下载黄金 ETF（GLD）最近 5 年数据（起始日期 `2021-01-01`，结束日期为当天）
-4. 使用 `LocalMarketDataProvider().get_bars(symbol, start, end)` 读取三只 ETF 的数据（510300.SS、QQQ、GLD）
-5. 将三只 ETF 的收盘价合并为一个 DataFrame，列名改为中文：`{"510300.SS": "沪深300", "QQQ": "纳指100", "GLD": "黄金"}`
+3. 使用 `YFinanceDownloader` 下载黄金ETF（518880.SS）最近 5 年数据（起始日期 `2021-01-01`，结束日期为当天）
+4. 使用 `LocalMarketDataProvider().get_bars(symbol, start, end)` 读取三只 ETF 的数据（510300.SS、513100.SS、518880.SS）
+5. 将三只 ETF 的收盘价合并为一个 DataFrame，列名改为中文：`{"510300.SS": "沪深300", "513100.SS": "纳指100", "518880.SS": "黄金"}`
 6. 计算日收益率（pct_change），然后计算相关性矩阵
 7. 画相关性热力图（figsize 8×6）：
    - 使用 matplotlib 的 imshow
@@ -39,7 +39,7 @@
    ```python
    from oxq.universe import StaticUniverse
    universe = StaticUniverse(
-       symbols=["510300.SS", "QQQ", "GLD"],
+       symbols=["510300.SS", "513100.SS", "518880.SS"],
        name="global-macro-etf"
    )
    snapshot = universe.get_universe(as_of_date="2026-02-28")
