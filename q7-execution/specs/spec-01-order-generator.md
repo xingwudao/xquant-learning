@@ -18,7 +18,7 @@
 
 2. 阅读以下 oxq 模块的源码，了解接口的输入、输出和参数含义：
    - `oxq.trade.order_generator` — `generate_orders()` 函数和 `PlannedOrder` 数据类
-     - `generate_orders(target_weights, positions, prices, total_capital, lot_size)` → `list[PlannedOrder]`
+     - `generate_orders(target_weights, positions, prices, total_capital, lot_size)` -- `list[PlannedOrder]`
      - `PlannedOrder` 属性：`order`（Order 对象）、`current_shares`、`target_shares`、`current_weight`、`target_weight`、`estimated_amount`
    - `oxq.core.types` — `Position` 数据类（`symbol`, `shares`, `avg_cost`）
 
@@ -42,7 +42,7 @@
 6. 第二步——美股 vs A 股取整偏差对比：
    - A 股标的和价格：沪深300ETF（510300）¥4.27、纳指100ETF（513100）¥1.72、黄金ETF（518880）¥8.04
    - A 股 10 万人民币，`lot_size=100`
-   - 对比表格：目标权重 → 美股（股数/实际权重/偏差）vs A 股（股数/实际权重/偏差）
+   - 对比表格：目标权重 -- 美股（股数/实际权重/偏差）vs A 股（股数/实际权重/偏差）
    - 打印两个市场的现金残余
 
 7. 第三步——资金量对取整偏差的影响：
