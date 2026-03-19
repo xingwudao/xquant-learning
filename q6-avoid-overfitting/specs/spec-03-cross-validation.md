@@ -32,7 +32,7 @@
 
 2. 复用 Step 2 的参数空间和约束（无止损组，70 组合）。
 
-3. TopNRanking 交叉验证：
+3. TopNRankingOptimizer 交叉验证：
    - `n_splits=5`, `expanding=True`
    - 数据范围：`DATA_START` 到当前日期
    - 传入 `paramset` 让 `cross_validate()` 自动做每折的 GridSearch

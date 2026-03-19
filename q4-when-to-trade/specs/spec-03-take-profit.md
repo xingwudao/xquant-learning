@@ -17,7 +17,7 @@
 ## 要求
 
 1. 阅读以下 oxq 模块的源码，了解接口的输入、输出和参数含义：
-   - `oxq.rules.TakeProfitRule`
+   - `oxq.rules.TakeProfitRule`（注意：TakeProfitRule 作为 rule 传入 `Engine.run(rules=[...])`，不再是 Strategy 字段）
 
 2. 解释 TakeProfitRule 的工作原理：
    - 当持有仓位时，TakeProfitRule 会以 `avg_cost x (1 + threshold)` 为止盈价，提交一个 limit SELL 挂单给 SimBroker
@@ -32,14 +32,15 @@
 
 4. 定义 4 组对比：不止盈 / threshold=0.10 / 0.20 / 0.30
 
-5. 全部含成本回测。Strategy 中同时包含止损和止盈：
+5. 全部含成本回测。调用 spec-01 定义的 `run_backtest` 辅助函数，将止损和止盈规则作为 order_rules 传入：
    ```python
-   Strategy(
-       ...
-       order_rules=[StopLossRule(threshold=SL), TakeProfitRule(threshold=TP)],
-       rebalance_rules=[RebalanceRule(weight_col="tw", frequency=F)],
+   run_backtest(
+       frequency=BEST_FREQ,
+       fee_model=PercentageFee(rate=Decimal("0.001"), min_fee=Decimal("5")),
+       order_rules=[StopLossRule(threshold=BEST_SL), TakeProfitRule(threshold=TP)],
    )
    ```
+   在 `run_backtest` 内部，所有规则与 `RebalanceFrequencyRule` 一起传入 `Engine.run(rules=[...])`。
 
 6. 打印对比表：止盈阈值、累计收益率、年化波动率、最大回撤、夏普比率、交易次数、总手续费
 

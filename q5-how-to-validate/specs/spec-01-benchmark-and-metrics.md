@@ -29,8 +29,9 @@
    - `from oxq.core import Engine, Strategy`
    - `from oxq.data import YFinanceDownloader, LocalMarketDataProvider`
    - `from oxq.indicators import RollingVolatility, Momentum, Ratio`
-   - `from oxq.signals import EqualWeight, RiskParity, TopNRanking`
-   - `from oxq.rules import RebalanceRule, StopLossRule`
+   - `from oxq.portfolio.optimizers import EqualWeightOptimizer, RiskParityOptimizer, TopNRankingOptimizer`
+   - `from oxq.signals import Threshold`
+   - `from oxq.rules import RebalanceFrequencyRule, StopLossRule`
    - `from oxq.trade import SimBroker, PercentageFee`
    - `from oxq.universe import StaticUniverse`
    - pandas, numpy, matplotlib.pyplot, Decimal
@@ -44,33 +45,45 @@
    - 构建 `StaticUniverse`
    - `FEE_MODEL = PercentageFee(rate=Decimal("0.001"), min_fee=Decimal("5"))`
 
-5. 定义辅助函数 `run_strategy(signal_cfg, indicators_cfg, freq=10, stop_loss=None)`：
+5. 先阅读 `oxq.portfolio.optimizers` 模块源码，了解 `EqualWeightOptimizer`、`RiskParityOptimizer`、`TopNRankingOptimizer` 的构造参数和 `required_indicators` 属性。
+
+6. 定义四个 portfolio 配置常量：
+   - `EW_PORTFOLIO = EqualWeightOptimizer()`
+   - `RP_PORTFOLIO = RiskParityOptimizer(volatility_col="vol")`
+   - `TNR_PORTFOLIO = TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
+   - `RP_SL_PORTFOLIO = RiskParityOptimizer(volatility_col="vol")`（与 RP 相同，止损在运行时指定）
+
+7. 定义辅助函数 `run_strategy(portfolio, indicators, freq=10, stop_loss=None)`：
+   - `portfolio` 是一个 optimizer 实例（如 `EqualWeightOptimizer()`）
+   - `indicators` 是指标列表（如 `[RollingVolatility(period=20)]`），从 `portfolio.required_indicators` 获取或手动指定
+   - 使用 `Threshold` 作为始终为真的信号
+   - 规则通过 `Engine.run(rules=[RebalanceFrequencyRule(freq), ...])` 传入
    - 组装 Strategy，含交易成本
    - 返回 RunResult
    - 供后续 spec 复用
 
-6. 运行四个策略：
-   - EqualWeight：无指标，`(EqualWeight(), {})`
-   - RiskParity：`vol` 指标（period=20），`(RiskParity(), {"vol": "vol"})`
-   - TopNRanking：`vol`+`mom`+`ram` 指标，`(TopNRanking(), {"score": "ram", "n": 3, "filter_negative": True})`
-   - RiskParity + 止损：同 RiskParity，额外 `stop_loss=0.05`
+8. 运行四个策略：
+   - EqualWeight：`run_strategy(EW_PORTFOLIO, indicators=[])`
+   - RiskParity：`run_strategy(RP_PORTFOLIO, indicators=[RollingVolatility(period=20)])`
+   - TopNRanking：`run_strategy(TNR_PORTFOLIO, indicators=[RollingVolatility(period=20), Momentum(period=20), Ratio(...)])`
+   - RiskParity + 止损：`run_strategy(RP_SL_PORTFOLIO, indicators=[RollingVolatility(period=20)], stop_loss=0.05)`
 
-7. 构造买入持有基准——等权买入 3 只 ETF，之后不做任何交易：
+9. 构造买入持有基准——等权买入 3 只 ETF，之后不做任何交易：
    - 加载价格数据，每只 ETF 归一化到 1，等权平均
    - 计算基准的累计收益、年化收益、年化波动率、最大回撤、夏普比
 
-8. 打印策略 vs 基准对比表：
+10. 打印策略 vs 基准对比表：
    - 列：策略名、累计收益、年化收益、波动率、最大回撤、夏普比、卡玛比、索提诺比
    - 最后一行是等权买入持有基准
    - 额外打印超额收益 / Alpha（策略累计 - 基准累计），并呼应 Q0 提到的 Alpha 概念：「还记得 Q0 说的吗？Beta 是跟着市场赚的钱，Alpha 是比市场多赚的钱——你的技能回报。」
 
-9. 画净值曲线对比图（figsize 12x6）：
+11. 画净值曲线对比图（figsize 12x6）：
    - 4 条策略线（不同颜色实线）+ 1 条基准线（灰色虚线）
    - 归一化到起点 = 100
    - 标题「策略 vs 买入持有基准」
    - 图例放在左上角
 
-10. 打印分析（根据实际数据动态描述方向，不要硬写"更高"或"更低"）：
+12. 打印分析（根据实际数据动态描述方向，不要硬写"更高"或"更低"）：
     - 哪些策略跑赢了基准？哪些没有？
     - 超额收益（Alpha）最大的是哪个？但卡玛比和索提诺比的排名呢？
     - 「年化 15% 好不好？取决于同期等权买入持有赚了多少。跑赢基准的部分，才是你的'本事'——多出来的叫超额收益，也就是 Q0 说的 Alpha。」

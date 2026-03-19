@@ -15,10 +15,11 @@
 1. 获取当前工作目录，以此为根目录操作。
 
 2. 阅读以下 oxq 模块的源码，了解各接口的输入、输出和参数含义：
-   - `oxq.signals.EqualWeight`
+   - `oxq.portfolio.optimizers.EqualWeightOptimizer`
+   - `oxq.signals.Threshold`
    - `oxq.indicators.RollingVolatility`
    - `oxq.core.Engine`、`oxq.core.Strategy`
-   - `oxq.rules.RebalanceRule`
+   - `oxq.rules.RebalanceFrequencyRule`
    - `oxq.trade.SimBroker`
    - `oxq.data.YFinanceDownloader`、`oxq.data.LocalMarketDataProvider`
    - `oxq.universe.StaticUniverse`
@@ -45,16 +46,18 @@
 
 7. 使用 `LocalMarketDataProvider` 加载数据，并为每只 ETF 预计算 20 日滚动波动率（后面 spec-02 会用到）。
 
-8. 用 `EqualWeight` 信号计算权重，打印最新一天每只 ETF 的权重值。
+8. 用 `EqualWeightOptimizer` 构建组合优化器。使用 `Threshold` 信号作为"始终持有"的入场信号（设置 `signal.required_indicators` 包含所需指标）。打印最新一天每只 ETF 的权重值。
 
 9. 打印权重的具体含义——假如总资金 10 万元，按权重换算每只各买多少钱。末尾加一句解释：权重（Weight）就是"这笔钱怎么分"——每只标的分到总资金的百分之多少。
 
 10. 对三只 ETF 分别计算**单独持有**的表现指标（累计收益率、年化波动率、最大回撤），用于与组合对比。
 
 11. 组装等权策略并运行回测。策略参数：
-    - 信号列名 `"tw"`
-    - 指标包含 20 日滚动波动率
-    - 再平衡频率 10 个交易日
+    - 使用 `Threshold` 信号（column="close", threshold=0, relationship="gt"）作为入场信号
+    - 指标包含 20 日滚动波动率（通过 `signal.required_indicators` 设置）
+    - 组合优化器使用 `EqualWeightOptimizer()`
+    - 再平衡规则 `RebalanceFrequencyRule(interval_days=10)` 传入 `Engine.run(rules=[...])`
+    - 权重时间序列通过 `result.weights_df()` 提取
 
 12. 画净值曲线图（figsize 12×6）：
     - 三只 ETF 单独持有的净值线（灰色，用不同线型区分：虚线、点线、点划线）

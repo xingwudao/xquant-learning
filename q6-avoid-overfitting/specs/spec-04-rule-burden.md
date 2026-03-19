@@ -22,30 +22,33 @@
    - `oxq.rules.TakeProfitRule` — 止盈规则（`threshold` 参数）
    - `oxq.rules.TrailingStopRule` — 移动止损规则（`trail_pct` 参数）
    - `oxq.rules.MaxDrawdownRule` — 最大回撤风控（`max_drawdown` 参数）
-   - `oxq.core.Engine` — 回测引擎（`Engine().run(strategy, market=..., broker=..., start=..., end=...)` 注意：构造函数无参数）
+   - `oxq.core.Engine` — 回测引擎（`Engine().run(strategy, market=..., broker=..., start=..., end=..., rules=[...])` 注意：构造函数无参数，rules 传入 `run()`）
+   - `oxq.rules.RebalanceFrequencyRule` — 调仓频率规则（`interval_days` 参数）
    - 确认 `ParameterSet.add_constraint()` 的约束表达式格式
 
 2. **4A 规则堆叠实验**：
-   - 基础策略：TopNRanking，固定参数 mom=20, vol=20, freq=10
+   - 基础策略：TopNRankingOptimizer，固定参数 mom=20, vol=20, interval_days=10
+   - 规则传入 `Engine().run(rules=[...])`，使用 `grid_search_with_rules()` 包装函数优化
+   - `run_layer` 函数签名简化为 `(layer_name, rules, paramset, description)`
    - 逐层添加规则，每层在样本内优化该层的参数：
      - Layer 0：基础策略（固定参数，无额外规则）
-     - Layer 1：+ 优化调仓频率（freq = FREQS，约束 freq <= mom.period）
+     - Layer 1：+ 优化调仓频率（interval_days = FREQS，约束 interval_days <= mom.period）
      - Layer 2：+ 优化止损（sl = SL_THRESHOLDS）
      - Layer 3：+ 优化止盈（tp = TP_THRESHOLDS，约束 sl < tp）
      - Layer 4：+ 优化移动止损（trail = TRAIL_PCTS，约束 trail >= sl）
      - Layer 5：+ 最大回撤风控（max_dd = MAX_DD_VALS，约束 max_dd >= sl）
    - 每层在样本内选最优 → 在样本外验证
    - 约束过滤不合理组合（止损 > 止盈、移动止损 < 固定止损等）
-   - Layer 0 没有参数可优化，直接用 `Engine().run()` 跑回测
+   - Layer 0 没有参数可优化，直接用 `Engine().run(rules=[RebalanceFrequencyRule(interval_days=10)])` 跑回测
    - 打印每层的样本内/样本外夏普、收益、衰减
 
 3. **4B 指标堆叠实验**：
    - 从 1 个参数开始，逐步增加可优化的参数维度：
      - A：只优化动量窗口（1 个自由度，PERIODS）
      - B：+ 波动率窗口（2 个自由度）
-     - C：+ 调仓频率（3 个自由度，约束 freq <= mom, freq <= vol）
+     - C：+ 调仓频率（3 个自由度，约束 interval_days <= mom, interval_days <= vol）
      - D：+ 止损阈值（4 个自由度，约束同 C）
-     - E：+ 止盈 + 移动止损（6 个自由度，粗网格 [10,20,30]，约束 freq<=mom, freq<=vol, sl<tp, trail>=sl）
+     - E：+ 止盈 + 移动止损（6 个自由度，粗网格 [10,20,30]，约束 interval_days<=mom, interval_days<=vol, sl<tp, trail>=sl）
    - 每层在样本内优化所有参数 → 样本外验证
    - 约束过滤不合理组合，与 4A 一致
    - 打印每层的自由度、组合数、样本内/样本外夏普、衰减

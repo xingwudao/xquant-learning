@@ -18,7 +18,8 @@
    - `from oxq.data import YFinanceDownloader, LocalMarketDataProvider`
    - `from oxq.indicators import SMA`
    - `from oxq.signals import Crossover`
-   - `from oxq.rules import FullPositionEntryRule, ExitRule`
+   - `from oxq.rules import ExitRule`
+   - `from oxq.portfolio.optimizers import EqualWeightOptimizer`
    - `from oxq.trade import SimBroker`
    - `from oxq.universe import StaticUniverse`
    - pandas, matplotlib.pyplot
@@ -27,10 +28,10 @@
 4. 下载沪深300ETF（`510300.SS`）最近 3 年数据（起始日期为 3 年前，结束日期为当天）
 5. 下载 5 只 A 股标的最近 3 年数据：`["600519.SS", "000858.SZ", "601318.SS", "000001.SZ", "600036.SS"]`（茅台、五粮液、中国平安、平安银行、招商银行）
 6. 对每个标的（5 只个股 + 沪深300ETF），构建一个 Strategy 并用 Engine 运行回测：
-   - 指标：`SMA(period=1)`（即收盘价）和 `SMA(period=20)`
    - 信号：`Crossover(fast="sma_1", slow="sma_20")`——SMA(1) 上穿 SMA(20) 等价于收盘价上穿 20 日均线
-   - 入场：`FullPositionEntryRule`（全仓买入）
-   - 出场：`ExitRule(fast="sma_1", slow="sma_20")`
+   - 将指标挂载到信号上：通过 `signal.required_indicators` 指定 `sma_1` 对应 `SMA()` 参数 `{"column": "close", "period": 1}`，`sma_20` 对应 `SMA()` 参数 `{"column": "close", "period": 20}`
+   - 构建策略：`Strategy(signals={...}, portfolio=EqualWeightOptimizer())`，入场由 `EqualWeightOptimizer` 处理
+   - 出场规则通过 `Engine.run(rules=[ExitRule(fast="sma_1", slow="sma_20")])` 传入
    - `router` 和 `receiver` 使用同一个 `SimBroker()` 实例
    - 用 `result.total_return()` 获取收益率
    - 用 `result.annualized_volatility()` 获取年化波动率

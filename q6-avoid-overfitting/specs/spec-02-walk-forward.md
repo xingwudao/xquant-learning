@@ -33,7 +33,7 @@
 2. 复用 Step 1 的参数范围和约束（无止损组）：
    - `PERIODS = [10, 15, 20, 25, 30]`
    - `FREQS = [5, 10, 15, 21]`
-   - 约束：`RebalanceRule.frequency <= mom.period`，`RebalanceRule.frequency <= vol.period`
+   - 约束：`RebalanceFrequencyRule.interval_days <= mom.period`，`RebalanceFrequencyRule.interval_days <= vol.period`
    - 约束后 70 组合
 
 3. Rolling Walk-Forward：
@@ -58,7 +58,7 @@
 
 7. 画 Walk-forward 结果图（figsize 14×6）：
    - 上半部分：每折的样本外夏普（Rolling 和 Anchored 各一条线）
-   - 下半部分：参数稳定性线图——从 `windows` 的 `best_params` 提取 mom.period 和 frequency，展示每折选择的参数变化趋势
+   - 下半部分：参数稳定性线图——从 `windows` 的 `best_params` 提取 mom.period 和 interval_days，展示每折选择的参数变化趋势
    - 标题「Walk-Forward 分析：Rolling vs Anchored」
    - 注意：monospace 字体区域（如 `family="monospace"` 的文本）只使用 ASCII 字符，不使用中文
 

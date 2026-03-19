@@ -5,9 +5,9 @@
 ## 上下文
 
 在 `q7-execution.ipynb` 中已有：
-- Step 1 的订单生成实验
-- Step 2 的成交价压力测试和成本层叠
-- Step 3 的回测 vs 实盘对比，`result_sim` 和 `result_live` 两个回测结果
+- Step 1 的订单生成实验（A 股 ETF）
+- Step 2 的成交价压力测试和成本层叠（A 股 ETF）
+- Step 3 的回测 vs 实盘对比（美股 ETF + Alpaca），`result_sim` 和 `result_live` 两个回测结果
 
 Step 3 让学员看到了整体的执行落差。但"整体差 2%"不够——需要知道具体哪笔交易差得最多，是标的问题还是日期问题，大部分交易的执行质量如何。
 

@@ -18,17 +18,18 @@
 
 1. RiskParity 波动率窗口敏感性：
    - 扫描 `vol_period = [10, 15, 20, 25, 30, 40]`
-   - 对每组参数运行 RiskParity 策略（含成本，freq=10）
+   - 对每组参数构造 `RiskParityOptimizer(volatility_col="vol")` 并调用 `run_strategy(portfolio, indicators=[RollingVolatility(period=vol_period)], freq=10)`
    - 打印对比表（6 行 × 5 列）：窗口、累计收益、夏普比、卡玛比、最大回撤
 
 2. TopNRanking 动量窗口敏感性：
    - 扫描 `mom_period = [10, 15, 20, 25, 30, 40]`（波动率窗口固定 20）
-   - 对每组参数运行 TopNRanking 策略（含成本，freq=10）
+   - 对每组参数构造 `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)` 并调用 `run_strategy(portfolio, indicators=[...], freq=10)`
    - 打印对比表（6 行 × 5 列）：窗口、累计收益、夏普比、卡玛比、最大回撤
 
 3. 止损阈值敏感性：
    - 标题注明「基于 RiskParity 策略，调仓频率 10 天」
    - 扫描 `thresholds = [0.02, 0.03, 0.05, 0.07, 0.10, 0.15, 0.20]` + 无止损
+   - 对每组参数调用 `run_strategy(RiskParityOptimizer(volatility_col="vol"), indicators=[...], freq=10, stop_loss=threshold)`
    - 打印对比表（8 行 × 5 列）：止损阈值、累计收益、夏普比、最大回撤、交易次数
 
 4. 计算每组的夏普比极差（最大夏普比 - 最小夏普比），打印对比：

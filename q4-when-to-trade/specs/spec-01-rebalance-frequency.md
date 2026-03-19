@@ -17,15 +17,17 @@
 2. 阅读以下 oxq 模块的源码，了解接口的输入、输出和参数含义：
    - `oxq.trade.PercentageFee`
    - `oxq.trade.SimBroker`（重点关注 `fee_model` 参数）
-   - `oxq.rules.RebalanceRule`
-   - `oxq.core.Engine`、`oxq.core.Strategy`
+   - `oxq.rules.RebalanceFrequencyRule`
+   - `oxq.portfolio.optimizers.RiskParityOptimizer`
+   - `oxq.core.Engine`（重点关注 `run(rules=[...])` 参数）、`oxq.core.Strategy`
 
 3. 创建 notebook `q4-when-to-trade.ipynb`，导入所需库并设置中文显示：
    - `from oxq.core import Engine, Strategy`
    - `from oxq.data import YFinanceDownloader, LocalMarketDataProvider`
    - `from oxq.indicators import RollingVolatility`
-   - `from oxq.signals import RiskParity`
-   - `from oxq.rules import RebalanceRule`
+   - `from oxq.signals import Threshold`
+   - `from oxq.portfolio.optimizers import RiskParityOptimizer`
+   - `from oxq.rules import RebalanceFrequencyRule`
    - `from oxq.trade import SimBroker, PercentageFee`
    - `from oxq.universe import StaticUniverse`
    - pandas, numpy, matplotlib.pyplot, Decimal
@@ -36,18 +38,35 @@
    - `SYMBOL_NAMES = {"510300.SS": "沪深300ETF", "513100.SS": "纳指100ETF", "518880.SS": "黄金ETF"}`
    - 数据起始日期 `START = "2021-01-01"`
    - 使用 `YFinanceDownloader` 下载数据
-   - 构建 `StaticUniverse`，加载数据并预计算 vol 指标
-   - RiskParity 信号（vol="vol"）
+   - 构建 `StaticUniverse`，加载数据
+   - 创建 Threshold 信号并绑定所需指标：
+     ```python
+     signal = Threshold()
+     signal.required_indicators = {"vol": (RollingVolatility(), {"column": "close", "period": 20})}
+     ```
+   - 创建 RiskParityOptimizer：`portfolio = RiskParityOptimizer(volatility_col="vol")`
 
-5. 定义公共策略配置 COMMON 字典（包含 universe、indicators、signals、entry_rules=[]、exit_rules=[]），供后续 spec 复用。
+5. 定义 `run_backtest(frequency, fee_model, order_rules)` 辅助函数，封装策略构建和回测执行，供后续 spec 复用：
+   ```python
+   def run_backtest(frequency, fee_model=None, order_rules=None):
+       strategy = Strategy(
+           signals={"active": (signal, {"column": "close", "threshold": 0, "relationship": "gt"})},
+           portfolio=portfolio,
+       )
+       rules = [RebalanceFrequencyRule(interval_days=frequency)]
+       if order_rules:
+           rules.extend(order_rules)
+       engine = Engine(universe=universe, strategy=strategy, broker=SimBroker(fee_model=fee_model))
+       return engine.run(rules=rules)
+   ```
 
 6. 定义 4 种调仓频率：`FREQUENCIES = [5, 10, 21, 63]`，分别对应约每周、两周、每月、每季度。
 
-7. 第一轮回测——不含成本（`SimBroker()`）：
+7. 第一轮回测——不含成本（`fee_model=None`）：
    - 循环跑 4 种频率的回测
    - 打印对比表：频率、累计收益率、年化波动率、最大回撤、夏普比率、交易次数
 
-8. 第二轮回测——含成本（`SimBroker(fee_model=PercentageFee(rate=Decimal("0.001"), min_fee=Decimal("5")))`）：
+8. 第二轮回测——含成本（`fee_model=PercentageFee(rate=Decimal("0.001"), min_fee=Decimal("5"))`）：
    - 循环跑 4 种频率的回测
    - 打印对比表：频率、累计收益率、年化波动率、最大回撤、夏普比率、交易次数、总手续费
    - 总手续费计算：`sum(f.fee for f in result.trades)`

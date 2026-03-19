@@ -5,10 +5,10 @@
 ## 上下文
 
 在 `q7-execution.ipynb` 中已有：
-- Step 1 的订单生成实验（取整偏差）
-- Step 2 的成交价压力测试和成本层叠
+- Step 1 的订单生成实验（A 股 ETF 取整偏差 + 美股对比）
+- Step 2 的成交价压力测试和成本层叠（A 股 ETF，含印花税）
 
-前两步用模拟方式暴露了取整偏差、滑点和成本，但都是"估算"。现在要接入 Alpaca 模拟交易平台，让策略真正跑一遍，看看回测和实盘到底差多少。
+前两步用 A 股 ETF 和 SimBroker 暴露了取整偏差、滑点和成本，但都是"估算"。现在切换为美股 ETF（SPY、QQQ、GLD），接入 Alpaca 模拟交易平台，让策略真正跑一遍——open-xquant 内置了 Alpaca 美股模拟交易接口，可以体验真实下单。
 
 ## 任务
 
@@ -44,10 +44,12 @@
      - `Engine.result` — 获取结果
    - `oxq.trade.order_generator` — `generate_orders()`
    - `oxq.core.types` — `Position`
+   - 策略相关：`make_us_strategy` 和 `make_us_rules` 辅助函数、`Threshold`（信号）、`RiskParityOptimizer`（组合优化器）、`RebalanceFrequencyRule`、`StopLossRule`
 
 2. **Part A——SimBroker 回测基准**：
-   - 复用 Step 2 的策略定义和数据
-   - 用收盘价模式 + 佣金跑一次完整回测，赋给 `result_sim`
+   - 下载美股数据：SPY、QQQ、GLD，起始日期 `2021-01-01`，用 `YFinanceDownloader` 下载
+   - 构造与 Step 2 相同的策略和规则：用 `make_us_strategy(name)` 构造美股策略，用 `make_us_rules()` 构造美股规则
+   - 用收盘价模式 + 佣金跑一次完整回测，`Engine.run()` 传入 `rules=make_us_rules()`，赋给 `result_sim`
    - 打印累计收益和交易笔数
 
 3. 定义公共画图函数 `plot_sim_vs_live(norm_sim, norm_live, title, label_sim, label_live)`：

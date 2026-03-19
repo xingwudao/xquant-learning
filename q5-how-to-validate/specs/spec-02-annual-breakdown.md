@@ -36,7 +36,7 @@
    - 标题「逐年收益对比」
 
 5. 深挖 TopNRanking 在负收益年份：
-   - 用不同动量窗口 `mom_period = [5, 10, 15, 20, 25, 30]` 分别运行 TopNRanking 策略
+   - 用不同动量窗口 `mom_period = [5, 10, 15, 20, 25, 30]` 分别构造 `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)` 并调用 `run_strategy(portfolio, indicators=[...])` 运行
    - 提取负收益年份的年收益率
    - 打印对比表：动量窗口 vs 该年收益
    - 如果所有窗口都亏钱，说明不是参数问题

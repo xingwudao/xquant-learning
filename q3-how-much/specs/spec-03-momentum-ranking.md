@@ -17,15 +17,16 @@
 ## 要求
 
 1. 阅读以下 oxq 模块的源码，了解接口的输入、输出和参数含义：
-   - `oxq.signals.TopNRanking`
+   - `oxq.portfolio.optimizers.TopNRankingOptimizer`
    - `oxq.indicators.Momentum`
    - `oxq.indicators.Ratio`
+   - `oxq.signals.Threshold`（若前面 spec 未阅读）
 
 2. 为每只 ETF 预计算 20 日动量，并用 `Ratio` 计算风险调整动量（ram = mom / vol）。
 
-3. 用 `TopNRanking` 信号计算权重（score 使用 ram 列，选 Top 3，过滤 ram 为负的标的）。打印三种信号的权重对比（取最新一天）。
+3. 用 `TopNRankingOptimizer` 构建组合优化器（score 使用 ram 列，选 Top 3，过滤 ram 为负的标的），配合 `Threshold` 信号计算权重。打印三种方案的权重对比（取最新一天）。
 
-4. 组装动量排名策略并运行回测（复用 COMMON 字典，indicators 中需额外加入 Momentum 和 Ratio）。
+4. 组装动量排名策略并运行回测（复用 COMMON 字典，`portfolio=TopNRankingOptimizer(...)`，`signal.required_indicators` 中需额外加入 Momentum 和 Ratio）。权重时间序列通过 `result.weights_df()` 提取。
 
 5. 打印三种方案的指标对比表（累计收益率、年化波动率、最大回撤）。
 

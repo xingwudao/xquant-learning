@@ -16,13 +16,15 @@
 
 ## 要求
 
-1. 阅读 `oxq.signals.RiskParity` 的源码，了解接口的输入、输出和参数含义。
+1. 阅读以下 oxq 模块的源码，了解接口的输入、输出和参数含义：
+   - `oxq.portfolio.optimizers.RiskParityOptimizer`
+   - `oxq.signals.Threshold`（若 spec-01 未阅读）
 
-2. 用 `RiskParity` 信号计算权重（使用 spec-01 中已预计算的 `vol` 列），打印最新一天与等权权重的对比。
+2. 用 `RiskParityOptimizer` 构建组合优化器，配合 `Threshold` 信号计算权重（使用 spec-01 中已预计算的 `vol` 列），打印最新一天与等权权重的对比。
 
 3. 打印风险平价权重的 10 万元换算，对比等权。
 
-4. 提取 spec-01 中等权策略与风险平价策略的公共部分为 `COMMON` 字典，使两个策略只在 `signals` 一行不同。组装风险平价策略并运行回测。
+4. 提取 spec-01 中等权策略与风险平价策略的公共部分为 `COMMON` 字典，使两个策略只在 `portfolio` 优化器一行不同（信号均使用 `Threshold`）。组装风险平价策略（`portfolio=RiskParityOptimizer()`）并运行回测。权重时间序列通过 `result.weights_df()` 提取。
 
 5. 打印两种方案的指标对比表（累计收益率、年化波动率、最大回撤）。
 

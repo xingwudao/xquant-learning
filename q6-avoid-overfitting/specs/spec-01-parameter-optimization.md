@@ -26,11 +26,13 @@
    - `from oxq.core import Engine, Strategy`
    - `from oxq.data import YFinanceDownloader, LocalMarketDataProvider`
    - `from oxq.indicators import RollingVolatility, Momentum, Ratio`
-   - `from oxq.signals import TopNRanking`
-   - `from oxq.rules import RebalanceRule, StopLossRule`
+   - `from oxq.signals import Threshold`
+   - `from oxq.portfolio.optimizers import TopNRankingOptimizer`
+   - `from oxq.rules import RebalanceFrequencyRule, StopLossRule`
    - `from oxq.trade import SimBroker, PercentageFee`
    - `from oxq.universe import StaticUniverse`
    - `from oxq.optimize import ParameterSet, GridSearch`
+   - `from oxq.optimize.search import _apply_params, _apply_rule_params`
    - pandas, numpy, matplotlib.pyplot, Decimal
    - 设置 matplotlib 中文显示支持（macOS: Arial Unicode MS / STHeiti, Windows: SimHei, `axes.unicode_minus = False`）
 
@@ -40,9 +42,10 @@
    - `FEE_MODEL = PercentageFee(rate=Decimal("0.001"), min_fee=Decimal("5"))`
 
 5. 构造基础策略（TopNRanking），阅读 `Strategy` 源码了解构造方式：
-   - 指标：RollingVolatility（period=20）、Momentum（period=20）、Ratio（mom/vol）
-   - 信号：TopNRanking（score="ram", n=3, filter_negative=True）
-   - 调仓规则：RebalanceRule（frequency=10）
+   - 信号：`Threshold`（always-true 信号），设置 `signal.required_indicators` 包含 RollingVolatility（period=20）、Momentum（period=20）、Ratio（mom/vol）
+   - 组合优化器：`TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
+   - Strategy 构造：`Strategy(signals={"active": (signal, {"column": "close", "threshold": 0, "relationship": "gt"})}, portfolio=TopNRankingOptimizer(...))`
+   - 规则传入 `Engine.run()`：`rules=[RebalanceFrequencyRule(interval_days=10)]`
 
 6. 数据切割——样本内/样本外（时间顺序正确，无前视问题）：
    - 找到所有标的的共同交易日
@@ -54,14 +57,15 @@
    - 动量和波动率窗口：`PERIODS = [10, 15, 20, 25, 30]`
    - 调仓频率：`FREQS = [5, 10, 15, 21]`
    - 止损阈值：`SL_THRESHOLDS = [0.03, 0.05, 0.07, 0.10, 0.15, 0.20]`
-   - 无止损组：mom.period × vol.period × RebalanceRule.frequency
+   - 无止损组：mom.period × vol.period × RebalanceFrequencyRule.interval_days
    - 含止损组：同上 + StopLossRule.threshold
-   - 约束：调仓频率不应超过信号窗口（`RebalanceRule.frequency <= mom.period`，`RebalanceRule.frequency <= vol.period`）
+   - 约束：调仓频率不应超过信号窗口（`RebalanceFrequencyRule.interval_days <= mom.period`，`RebalanceFrequencyRule.interval_days <= vol.period`）
    - 用 `add_constraint(expr)` 添加约束，格式：`"component.param op component.param"`
    - 打印约束后的有效组合数（用 `len(paramset.grid())`）
 
 8. 网格搜索：
-   - 用 `GridSearch(paramset).run(strategy=..., market=..., broker_factory=..., start=..., end=..., metric="sharpe_ratio")` 跑所有有效参数组合
+   - `GridSearch.run()` 不支持直接传入 rules，需要编写 `grid_search_with_rules()` 包装函数
+   - 包装函数使用 `_apply_params` 和 `_apply_rule_params`（从 `oxq.optimize.search` 导入）将参数应用到 strategy 和 rules 上
    - `broker_factory` 使用 `lambda: SimBroker(fee_model=FEE_MODEL)`
    - 分别对无止损组和含止损组，在样本内和样本外各跑一次
    - 合并结果
