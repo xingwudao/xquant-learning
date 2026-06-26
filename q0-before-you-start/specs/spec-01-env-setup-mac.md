@@ -13,25 +13,37 @@
 uv 是一个 Python 包管理工具，用它来管理 Python 版本和依赖包。
 
 在终端运行：
+```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 
 安装完成后，运行以下命令让 uv 生效：
+```bash
 source $HOME/.local/bin/env
+```
 
 然后验证安装成功：
+```bash
 uv --version
+```
 
 ## 第二步：在当前目录创建虚拟环境
 
 在当前目录下用 uv 创建虚拟环境（会自动下载 Python 3.12）：
 
+```bash
 uv venv --python 3.12
+```
 
 然后激活虚拟环境：
+```bash
 source .venv/bin/activate
+```
 
 验证 Python 版本：
+```bash
 python --version
+```
 
 应该显示 Python 3.12.x。
 
@@ -39,16 +51,21 @@ python --version
 
 使用清华镜像源安装以下 6 个包（国内速度更快）：
 
+```bash
 uv pip install --index-url https://pypi.tuna.tsinghua.edu.cn/simple jupyter pandas numpy matplotlib akshare yfinance
+```
 
 然后安装课程配套的量化交易框架 open-xquant（从 GitHub 安装，尚未发布到 PyPI）：
 
+```bash
 uv pip install "open-xquant @ git+https://github.com/xingwudao/open-xquant.git"
+```
 
 ## 第四步：创建并运行环境检查脚本
 
-请在当前目录下创建文件 check_env.py，内容如下：
+请在当前目录下创建文件 `check_env.py`，内容如下：
 
+```python
 """
 XQuant 课程环境检查脚本
 
@@ -178,13 +195,16 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+```
 
 文件创建完成后，运行：
+```bash
 python check_env.py
+```
 
 如果所有检查项都显示 [OK]，环境配置就完成了。如果有失败项，请把输出结果发给我，我帮你排查。
 
 ## 注意事项
-- 如果终端提示 uv: command not found，请先运行 source $HOME/.local/bin/env
+- 如果终端提示 `uv: command not found`，请先运行 `source $HOME/.local/bin/env`
 - 如果 pip install 很慢或超时，已经指定了清华镜像源，应该不会有问题
-- 每次打开新的终端窗口，都需要先激活虚拟环境：source .venv/bin/activate
+- 每次打开新的终端窗口，都需要先激活虚拟环境：`source .venv/bin/activate`
