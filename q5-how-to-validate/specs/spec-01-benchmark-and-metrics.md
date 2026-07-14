@@ -1,6 +1,6 @@
 # Spec: 跟什么比？——基准与风险调整指标
 
-> 所有命令在沙箱外运行。
+> 在 notebook 当前内核中运行；使用 open-xquant SDK 模块，不使用 `today`、`now()` 或默认截止日期。
 
 ## 上下文
 
@@ -40,10 +40,18 @@
 4. 复用 Q3/Q4 的数据和策略配置：
    - `SYMBOLS = ("510300.SS", "513100.SS", "518880.SS")`
    - `SYMBOL_NAMES = {"510300.SS": "沪深300ETF", "513100.SS": "纳指100ETF", "518880.SS": "黄金ETF"}`
-   - 数据起始日期 `START = "2021-01-01"`
-   - 使用 `YFinanceDownloader` 下载数据
+   - 数据窗口固定为 `START = "2021-01-01"`、`END = "2026-03-18"`
+   - 不要使用 `today`、`pd.Timestamp.now()` 或省略 `end` 的下载方式
+   - yfinance 的 `end` 是排他边界，下载时使用 `DOWNLOAD_END = "2026-03-19"`，回测和读取本地数据仍使用 `END`
+   - 使用 `YFinanceDownloader` 下载数据，读取时用 `market.get_bars(symbol, START, END)`
    - 构建 `StaticUniverse`
    - `FEE_MODEL = PercentageFee(rate=Decimal("0.001"), min_fee=Decimal("5"))`
+   - 为复现书中原实验语义，使用兼容 broker。手续费仍计入绩效，但不因为手续费现金余量拒绝调仓买单：
+     ```python
+     class BookCompatibleSimBroker(SimBroker):
+         def set_available_cash(self, cash):
+             self._available_cash = None
+     ```
 
 5. 先阅读 `oxq.portfolio.optimizers` 模块源码，了解 `EqualWeightOptimizer`、`RiskParityOptimizer`、`TopNRankingOptimizer` 的构造参数和 `required_indicators` 属性。
 
@@ -53,20 +61,21 @@
    - `TNR_PORTFOLIO = TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
    - `RP_SL_PORTFOLIO = RiskParityOptimizer(volatility_col="vol")`（与 RP 相同，止损在运行时指定）
 
-7. 定义辅助函数 `run_strategy(portfolio, indicators, freq=10, stop_loss=None)`：
+7. 定义辅助函数 `run_strategy(portfolio, indicators=None, freq=10, stop_loss=None)`：
    - `portfolio` 是一个 optimizer 实例（如 `EqualWeightOptimizer()`）
-   - `indicators` 是指标列表（如 `[RollingVolatility(period=20)]`），从 `portfolio.required_indicators` 获取或手动指定
+   - `indicators` 是指标字典 `{"列名": (Indicator(), {"参数": 值})}`，例如 `{"vol": (RollingVolatility(), {"column": "close", "period": 20})}`。`indicators=None` 表示无需指标（EqualWeight）
    - 使用 `Threshold` 作为始终为真的信号
-   - 规则通过 `Engine.run(rules=[RebalanceFrequencyRule(freq), ...])` 传入
-   - 组装 Strategy，含交易成本
+   - 规则通过 `Engine.run(rules=[RebalanceFrequencyRule(interval_days=freq), ...])` 传入
+   - 组装 Strategy，含交易成本，broker 使用 `BookCompatibleSimBroker(fee_model=FEE_MODEL)`
+   - `Engine().run(..., start=START, end=END, rules=rules)`
    - 返回 RunResult
    - 供后续 spec 复用
 
 8. 运行四个策略：
-   - EqualWeight：`run_strategy(EW_PORTFOLIO, indicators=[])`
-   - RiskParity：`run_strategy(RP_PORTFOLIO, indicators=[RollingVolatility(period=20)])`
-   - TopNRanking：`run_strategy(TNR_PORTFOLIO, indicators=[RollingVolatility(period=20), Momentum(period=20), Ratio(...)])`
-   - RiskParity + 止损：`run_strategy(RP_SL_PORTFOLIO, indicators=[RollingVolatility(period=20)], stop_loss=0.05)`
+   - EqualWeight：`run_strategy(EW_PORTFOLIO)`
+   - RiskParity：`run_strategy(RP_PORTFOLIO, indicators={"vol": (RollingVolatility(), {"column": "close", "period": 20})})`
+   - TopNRanking：`run_strategy(TNR_PORTFOLIO, indicators={"vol": (RollingVolatility(), {"column": "close", "period": 20}), "mom": (Momentum(), {"column": "close", "period": 20}), "ram": (Ratio(), {"col_a": "mom", "col_b": "vol"})})`
+   - RiskParity + 止损：`run_strategy(RP_SL_PORTFOLIO, indicators={"vol": (RollingVolatility(), {"column": "close", "period": 20})}, stop_loss=0.05)`
 
 9. 构造买入持有基准——等权买入 3 只 ETF，之后不做任何交易：
    - 加载价格数据，每只 ETF 归一化到 1，等权平均
@@ -104,3 +113,9 @@
 - 对比表有 5 行（4 策略 + 1 基准），8 个指标列（使用中文指标名：夏普比、卡玛比、索提诺比）
 - 净值曲线图显示 5 条线（4 实线 + 1 虚线）
 - 超额收益有正有负或全正
+- 固定窗口参考结果应接近：
+  - EqualWeight 累计收益 `83.59%`
+  - RiskParity 累计收益 `101.68%`
+  - TopNRanking 累计收益 `131.32%`
+  - RP+止损5% 累计收益 `100.79%`
+  - 等权买入持有基准累计收益 `92.04%`

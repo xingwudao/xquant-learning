@@ -46,17 +46,20 @@
 6. 创建代码单元格：下载 Q3 三只标的并运行基准回测。
    - 导入 oxq 组件：`Engine`, `Strategy`, `Momentum as OxqMomentum`, `RollingVolatility as OxqRollingVol`, `Ratio`, `TopNRankingOptimizer`, `Threshold`, `SimBroker`, `StaticUniverse`, `RebalanceFrequencyRule`, `LocalMarketDataProvider as OxqMarket`
    - Q3 标的：510300.SS（沪深300）、513100.SS（纳指100）、518880.SS（黄金）
-   - 起始日期 2021-01-01，结束日期用 `pd.Timestamp.now().strftime("%Y-%m-%d")`
-   - 下载数据并打印每只标的的交易天数
+   - 固定策略分析窗口：2021-01-01 至 2026-03-26
+   - 固定预热起始日期：2020-06-01
+   - 使用 `YFinanceDownloader()` 下载时，下载窗口为 2020-06-01 至 2026-03-27（yfinance end 为半开区间）
+   - 不使用 `pd.Timestamp.now()`、`today` 或任何运行时日期
+   - 打印每只标的在 2021-01-01 至 2026-03-26 的交易天数
    - 基准策略配置：
      - `StaticUniverse(symbols=q3_symbols, name="q3-macro-etf")`
      - `Threshold` 信号，required_indicators 包含 mom（20日）、vol（20日）、ram（Ratio）
      - `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
-     - `RebalanceFrequencyRule(interval_days=21)`，data_start="2020-06-01"
+     - `RebalanceFrequencyRule(interval_days=21)`，`data_start=Q3_DATA_START`
    - 打印基准策略的累计收益、年化波动率、最大回撤、夏普比率
 
 7. 创建代码单元格：波动率过滤改进。
-   - 先计算市场平均波动率：三只标的的 20 日波动率均值（从 2020-06-01 开始）
+   - 先计算市场平均波动率：三只标的的 20 日波动率均值（从 2020-06-01 至 2026-03-26）
    - 实现 `VolFilteredOptimizer` 类，包装 `TopNRankingOptimizer`：
      - 接受 `base_optimizer`、`vol_threshold`、`market_vol` 参数
      - `optimize` 方法：先调用 base optimizer 获取权重，再从 indicators 中取最新日期查 market_vol，若超过阈值则将所有持仓权重减半、多余部分分配给 CASH
@@ -99,7 +102,7 @@
 
 - 所有单元格无报错运行完毕
 - 三因子 IC 对比表有 3 行，IC 值在合理范围
-- Q3 三只标的数据均有数百条以上记录
+- Q3 三只标的数据固定读取到 2026-03-26，且均有数百条以上记录
 - 基准策略和波动率过滤策略均有有效回测结果（累计收益、夏普等非 NaN）
 - 净值曲线图显示 2 条线（蓝色和橙色）
 - 对比表清晰展示两种策略的差异

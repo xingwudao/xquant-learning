@@ -1,6 +1,6 @@
 # Spec: 参数动一动，崩不崩？——参数敏感性
 
-> 所有命令在沙箱外运行。
+> 在 notebook 当前内核中运行；沿用 spec-01 的固定数据窗口、`run_strategy` 和兼容 broker。
 
 ## 上下文
 
@@ -10,6 +10,8 @@
 
 当前问题：所有分析都基于特定参数（period=20, frequency=10, threshold=0.05）。如果参数稍微变一下，结论还成立吗？
 
+注意：这里的参数扫描不是为了找新的最优参数，而是为了检查既有结论是否稳健。第 1 章的扫描偏“挑值”，本章的扫描偏“看形状”。
+
 ## 任务
 
 在 notebook 中新建代码单元格，扫描关键参数的敏感性，对比不同策略的稳健程度。
@@ -18,18 +20,22 @@
 
 1. RiskParity 波动率窗口敏感性：
    - 扫描 `vol_period = [10, 15, 20, 25, 30, 40]`
-   - 对每组参数构造 `RiskParityOptimizer(volatility_col="vol")` 并调用 `run_strategy(portfolio, indicators=[RollingVolatility(period=vol_period)], freq=10)`
+   - 对每组参数构造 `RiskParityOptimizer(volatility_col="vol")`
+   - 指标使用 dict 形态：`{"vol": (RollingVolatility(), {"column": "close", "period": p})}`
+   - 调用 `run_strategy(RP_PORTFOLIO, indicators=ind, freq=10)`
    - 打印对比表（6 行 × 5 列）：窗口、累计收益、夏普比、卡玛比、最大回撤
 
 2. TopNRanking 动量窗口敏感性：
    - 扫描 `mom_period = [10, 15, 20, 25, 30, 40]`（波动率窗口固定 20）
-   - 对每组参数构造 `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)` 并调用 `run_strategy(portfolio, indicators=[...], freq=10)`
+   - 对每组参数构造 `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
+   - 指标使用 dict 形态：`{"vol": (RollingVolatility(), {"column": "close", "period": 20}), "mom": (Momentum(), {"column": "close", "period": p}), "ram": (Ratio(), {"col_a": "mom", "col_b": "vol"})}`
+   - 调用 `run_strategy(TNR_PORTFOLIO, indicators=ind, freq=10)`
    - 打印对比表（6 行 × 5 列）：窗口、累计收益、夏普比、卡玛比、最大回撤
 
 3. 止损阈值敏感性：
    - 标题注明「基于 RiskParity 策略，调仓频率 10 天」
    - 扫描 `thresholds = [0.02, 0.03, 0.05, 0.07, 0.10, 0.15, 0.20]` + 无止损
-   - 对每组参数调用 `run_strategy(RiskParityOptimizer(volatility_col="vol"), indicators=[...], freq=10, stop_loss=threshold)`
+   - 对每组参数调用 `run_strategy(RP_PORTFOLIO, indicators=RP_IND, freq=10, stop_loss=threshold)`
    - 打印对比表（8 行 × 5 列）：止损阈值、累计收益、夏普比、最大回撤、交易次数
 
 4. 计算每组的夏普比极差（最大夏普比 - 最小夏普比），打印对比：
@@ -42,6 +48,7 @@
    - 子图 2：TopNRanking mom_period（x 轴）vs 夏普比（y 轴），标题「TopNRanking 动量窗口」
    - 子图 3：止损阈值（x 轴）vs 夏普比（y 轴），无止损用虚线标注，标题「RiskParity 止损阈值」
    - 三个子图的 y 轴范围统一，方便对比波动幅度
+   - 保存为 `../book/images/05-parameter-sensitivity.png`
 
 6. 打印分析（根据实际数据动态描述方向）：
    - RiskParity 的夏普比极差 vs TopNRanking 的夏普比极差
@@ -66,3 +73,8 @@
 - 折线图 3 个子图，y 轴范围一致
 - 夏普比极差有明确数值，可判断高原型 vs 山峰型
 - RiskParity 极差明显小于 TopNRanking 极差
+- 固定窗口参考结果应接近：
+  - RiskParity 夏普比极差 `0.12`
+  - TopNRanking 夏普比极差 `0.93`
+  - 止损阈值夏普比极差 `0.17`
+  - TopNRanking 是山峰型，RiskParity 是高原型

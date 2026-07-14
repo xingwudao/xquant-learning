@@ -35,14 +35,18 @@
 4. 定义常量和策略：
    - A 股标的：`SYMBOLS = ("510300.SS", "513100.SS", "518880.SS")`
    - 中文名映射：沪深300ETF、纳指100ETF、黄金ETF
-   - 起始日期：`2021-01-01`，结束日期：当前日期
+   - 起始日期：`START = "2021-01-01"`
+   - 历史下载截止参数：`END = "2026-03-19"`
+   - 实际回测最后交易日：`DATA_END = "2026-03-18"`
+   - 下载数据时使用 `end=END`，本地读取和回测时使用 `end=DATA_END`
+   - A 股交易日历：`CN_MARKET_CALENDAR = "XSHG"`
    - 下载数据（`YFinanceDownloader`，失败时 try/except 用本地缓存）
    - 定义 `make_strategy(name, hypothesis="", objectives=None)` 工具函数：创建 `Threshold` 信号，设置 `required_indicators`，使用 `RiskParityOptimizer(volatility_col="vol")`
    - 定义 `make_rules(freq=None, stop_loss=None)` 工具函数：返回 `[RebalanceFrequencyRule(interval_days=freq or BEST_FREQ), StopLossRule(threshold=stop_loss or BEST_SL)]`
    - 佣金模型：`PercentageFee(rate=Decimal("0.0006"), min_fee=Decimal("5"))`
 
 5. 跑基准回测：
-   - 用 `SimBroker(fee_model=..., fill_price_mode=FillPriceMode.NEXT_OPEN)` 跑完整回测，`Engine.run()` 传入 `rules=make_rules()`
+   - 用 `SimBroker(fee_model=..., fill_price_mode=FillPriceMode.NEXT_OPEN, market_calendar=CN_MARKET_CALENDAR)` 跑完整回测，`Engine.run()` 传入 `rules=make_rules()`
    - 回测后把沪深300价格放入 `result_base.benchmark_prices["510300.SS"]`，供 StrategyMonitor 使用
    - 打印累计收益、年化收益、最大回撤、夏普比率、交易笔数
 

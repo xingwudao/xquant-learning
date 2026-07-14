@@ -19,7 +19,8 @@
      - 原 10 国：USA→QQQ, CHN→FXI, JPN→EWJ, DEU→EWG, GBR→EWU, FRA→EWQ, IND→INDA, BRA→EWZ, CAN→EWC, KOR→EWY
      - 新增 12 国：AUS→EWA, TWN→EWT, MEX→EWW, ITA→EWI, ESP→EWP, SWE→EWD, NLD→EWN, THA→THD, MYS→EWM, ZAF→EZA, ISR→EIS, SGP→EWS
      - 大宗商品：GOLD→GLD, OIL→USO, SILVER→SLV
-   - 时间范围：2015-01-01 至 2025-12-31
+   - 固定分析窗口：2015-01-01 至 2025-12-30
+   - 使用 `YFinanceDownloader()` 下载时，下载 end 用 2025-12-31（yfinance end 为半开区间）
    - 复用 Step 1 的 `downloader` 和 `provider`
    - 打印覆盖表（代号、Ticker、中文名、起始/结束日期、交易天数）
 
@@ -69,7 +70,7 @@
 ## 验证
 
 - 所有单元格无报错运行完毕
-- 25 只标的全部加载成功
+- 25 只标的全部加载成功，且固定读取到 2025-12-30
 - IC 对比表有 6 行（2 因子 × 3 窗口），IC 均值绝对值在合理范围（接近 0）
 - 2×3 子图中每格都有 IC 柱状图和滚动均值线
 - 分组 IC 表显示高波动组 IC 低于低波动组（spread > 0）

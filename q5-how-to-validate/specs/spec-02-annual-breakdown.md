@@ -1,6 +1,6 @@
 # Spec: 每年都有收益吗？——分段检验
 
-> 所有命令在沙箱外运行。
+> 在 notebook 当前内核中运行；沿用 spec-01 的 `START = "2021-01-01"`、`END = "2026-03-18"`、`run_strategy` 和兼容 broker。
 
 ## 上下文
 
@@ -24,6 +24,7 @@
    - 用 `daily_returns()` 按年分组
    - 计算每年的：年收益率（累乘）、年波动率、年夏普比、年内最大回撤
    - 同时计算等权买入持有基准的逐年收益
+   - 年内样本少于 20 个交易日时跳过：`if len(year_data) < 20: continue`
 
 3. 打印逐年对比表：
    - 行：年份
@@ -32,13 +33,18 @@
 
 4. 画逐年收益柱状图（figsize 14x6）：
    - 每年一组柱子，每个策略一种颜色 + 基准灰色
+   - 颜色与 spec-01 一致：EqualWeight `#4472C4`、RiskParity `#ED7D31`、TopNRanking `#70AD47`、RP+止损5% `#FFC000`、基准 `#A5A5A5`
    - y=0 处画一条水平线
    - 标题「逐年收益对比」
+   - 保存为 `../book/images/02-annual-return-comparison.png`
 
 5. 深挖 TopNRanking 在负收益年份：
-   - 用不同动量窗口 `mom_period = [5, 10, 15, 20, 25, 30]` 分别构造 `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)` 并调用 `run_strategy(portfolio, indicators=[...])` 运行
+   - 用不同动量窗口 `mom_period = [5, 10, 15, 20, 25, 30]` 分别构造 `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
+   - 指标使用 dict 形态：`{"vol": (RollingVolatility(), {"column": "close", "period": 20}), "mom": (Momentum(), {"column": "close", "period": p}), "ram": (Ratio(), {"col_a": "mom", "col_b": "vol"})}`
+   - 每个窗口只调用一次 `run_strategy(...)`，结果存入 `deep_dive[period]`
    - 提取负收益年份的年收益率
    - 打印对比表：动量窗口 vs 该年收益
+   - 从 `deep_dive` 里直接判断是否所有窗口都亏钱，不要重新回测
    - 如果所有窗口都亏钱，说明不是参数问题
 
 6. 打印分析（根据实际数据动态描述方向）：
@@ -63,3 +69,7 @@
 - 柱状图每年 5 根柱子
 - TopNRanking 深挖表有 6 行（6 个动量窗口）
 - 如果 TopNRanking 有负收益年份，深挖表展示了该年份各窗口的表现
+- 固定窗口参考结果应接近：
+  - 2021 年 TopNRanking 为 `-4.81%`
+  - 2022 年 EqualWeight、RiskParity、RP+止损5% 和基准为负收益
+  - TopNRanking 2021 年 6 个动量窗口均为负收益

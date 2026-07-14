@@ -42,15 +42,17 @@
 
 6. 创建代码单元格：下载 10 个国家的 GDP 数据。
    - 国家列表：USA, CHN, JPN, DEU, GBR, FRA, IND, BRA, CAN, KOR
+   - 固定 GDP 年份窗口：2010-2024
    - 使用 `WorldBankFetcher()` + `FactorDownloader(fetcher, sub="macro")`
-   - 调用 `dl.download("gdp", start="2010", end="2024", countries=countries)`
+   - 调用 `dl.download("gdp", start=str(GDP_START_YEAR), end=str(GDP_END_YEAR), countries=countries)`
    - 用 `read_factor("gdp", ...)` 读取，打印形状
    - 以万亿美元为单位显示（除以 1e12），设置 columns.name="国家"、index.name="年份"
 
 7. 创建代码单元格：下载 10 个国家对应 ETF 的价格数据。
    - 映射关系：USA→QQQ, CHN→FXI, JPN→EWJ, DEU→EWG, GBR→EWU, FRA→EWQ, IND→INDA, BRA→EWZ, CAN→EWC, KOR→EWY
-   - 使用 `YFinanceDownloader()` 下载，时间范围 2011-01-01 至 2026-12-31
-   - 使用 `LocalMarketDataProvider().get_bars()` 读取
+   - 固定分析窗口：2011-01-01 至 2026-03-26
+   - 使用 `YFinanceDownloader()` 下载，下载 end 用 2026-03-27（yfinance end 为半开区间）
+   - 使用 `LocalMarketDataProvider().get_bars()` 读取到 2026-03-26
    - 打印覆盖表（国家、ETF、数据条数、起始/结束日期）
 
 8. 创建代码单元格：计算两个 GDP 因子的年度 IC 并画图。
@@ -92,7 +94,7 @@
 
 - 所有单元格无报错运行完毕
 - GDP 数据包含 10 个国家、2010-2024 年
-- 10 只 ETF 数据均有数百至数千条记录
+- 10 只 ETF 数据固定读取到 2026-03-26，且均有数百至数千条记录
 - IC 柱状图显示约 10 个年度配对，正负均有
 - slope chart 中美两国红色高亮可见
 - 因子分类表有 6 行

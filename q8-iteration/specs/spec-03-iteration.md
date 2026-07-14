@@ -7,7 +7,7 @@
 在 `q8-iteration.ipynb` 中已有：
 - Step 1 的监控仪表盘（恶化时段检测）
 - Step 2 的三步诊断（执行 OK、市场状态变了、参数有改进空间）
-- 已定义的变量：`result_base`、`equity`、`daily_ret`、`detector`、`high_vol_mask`、`market_vol`、`SYMBOLS`、`NAMES`、`START`、`today`、`market`、`make_strategy`、`make_rules`、`FEE_MODEL`、`BEST_FREQ`、`BEST_SL`
+- 已定义的变量：`result_base`、`equity`、`daily_ret`、`detector`、`high_vol_mask`、`market_vol`、`SYMBOLS`、`NAMES`、`START`、`END`、`DATA_END`、`CN_MARKET_CALENDAR`、`market`、`make_strategy`、`make_rules`、`FEE_MODEL`、`BEST_FREQ`、`BEST_SL`
 
 诊断结论：策略对高波动的市场状态没有应对方案。现在用假设驱动的对照实验来迭代改进。
 
@@ -27,6 +27,8 @@
    - 创建 Strategy 时填写 `hypothesis="缩短调仓频率能改善高波动期表现"` 和对应的 `objectives`
    - 打印策略的 hypothesis 和 objectives 字段值
    - 对 6 种频率（5/10/15/21/42/63 天）分别跑回测，`Engine.run()` 传入 `rules=make_rules(freq=频率)`
+   - 每次 `FillPriceMode.NEXT_OPEN` 回测都必须传入 `market_calendar=CN_MARKET_CALENDAR`
+   - 全部回测使用 `start=START`、`end=DATA_END`
    - 对每种频率，计算高波动时段的夏普（用 `high_vol_mask` 筛选对应日期的日收益）
    - 打印全时段指标表：频率、年化收益、最大回撤、夏普比率、高波动夏普，21 天行标注"-- 基准"
    - 画净值对比图（figsize 14×7，6 条线，21 天加粗），图例标注"高波动夏普"而非全时段夏普
@@ -40,6 +42,8 @@
    - 市场波动率使用 `detector.market_vol`（复用 Step 2 的 MarketStateDetector）
    - 测试 4 种配置：无过滤（基准 `RiskParityOptimizer`）、阈值 10%、阈值 15%、阈值 20%（后三者使用 `VolFilteredOptimizer`）
    - `Engine.run()` 传入 `rules=make_rules()`
+   - `FillPriceMode.NEXT_OPEN` broker 必须传入 `market_calendar=CN_MARKET_CALENDAR`
+   - 回测窗口使用 `start=START`、`end=DATA_END`
    - 打印指标表：配置、年化收益、最大回撤、夏普比率、回撤改善比例
    - 画净值对比图（figsize 14×7，4 条线）
    - 假设验证：检查最佳配置是否满足两个验证标准，判断假设确认还是推翻

@@ -47,7 +47,9 @@
    - 策略相关：`make_us_strategy` 和 `make_us_rules` 辅助函数、`Threshold`（信号）、`RiskParityOptimizer`（组合优化器）、`RebalanceFrequencyRule`、`StopLossRule`
 
 2. **Part A——SimBroker 回测基准**：
-   - 下载美股数据：SPY、QQQ、GLD，起始日期 `2021-01-01`，用 `YFinanceDownloader` 下载
+   - 下载美股数据：SPY、QQQ、GLD
+   - 固定历史窗口：`START = "2021-01-01"`，`END = "2026-03-18"`，`DOWNLOAD_END = "2026-03-19"`
+   - 用 `YFinanceDownloader` 下载时传入 `end=DOWNLOAD_END`，回测和本地读取传入 `end=END`
    - 构造与 Step 2 相同的策略和规则：用 `make_us_strategy(name)` 构造美股策略，用 `make_us_rules()` 构造美股规则
    - 用收盘价模式 + 佣金跑一次完整回测，`Engine.run()` 传入 `rules=make_us_rules()`，赋给 `result_sim`
    - 打印累计收益和交易笔数
@@ -60,7 +62,7 @@
 4. 检测 Alpaca 环境变量：用 `os.environ.get("ALPACA_API_KEY")` 判断。全部 Alpaca 操作包在 try/except 中，失败时自动切换到要求 7 的替代方案。
 
 5. **Part B-1——数据源差异**（有 Alpaca 时执行）：
-   - 用 `AlpacaMarketDataProvider(feed="iex")` 获取同期历史数据
+   - 用 `AlpacaMarketDataProvider(feed="iex")` 获取 `START` 到 `END` 的同期历史数据
    - 用 `Engine.setup()` + `Engine.step()` 逐 bar 执行，配合 SimBroker
    - 对比 YFinance 数据和 Alpaca IEX 数据的回测结果
    - 调用 `plot_sim_vs_live()` 画净值对比图，标题"同一策略，不同数据源"
@@ -70,7 +72,8 @@
    - 打印分隔线和标题"LiveBroker 实盘演示：提交真实订单到 Alpaca 模拟盘"
    - 用 `AlpacaClient.get_positions()` 获取当前持仓，打印每个标的的股数和成本价，将持仓转为 `dict[str, Position]`
    - 用 `AlpacaClient.get_account()` 获取账户权益
-   - 用 `AlpacaMarketDataProvider` 获取各标的最新价格（如果当天无数据，用最近一个交易日的收盘价）
+   - 教学复现实验使用 `END` 附近的历史价格生成订单；如果 `END` 当天无数据，用 `END` 前 30 天内最近一个交易日的收盘价
+   - 生产环境真实下单时才改为当前最新价格
    - 用 `generate_orders(target_weights, positions, prices, total_capital=equity, lot_size=1)` 生成调仓订单
    - 如果无需调仓（`planned` 为空），打印"无需调仓，当前持仓已符合目标权重"
    - 如果有订单，用 `LiveBroker(paper=True)` 逐笔提交，打印每笔订单的提交确认
@@ -82,7 +85,8 @@
    - 将 Part B-1 的回测结果赋给 `result_live`（供 Step 4 使用）
 
 7. **无 Alpaca 替代方案**（无环境变量或 Alpaca 连接失败时执行）：
-   - 用 `SimBroker(fee_model=..., slippage_model=..., fill_price_mode=FillPriceMode.NEXT_OPEN)` 模拟实盘
+   - 定义美股交易日历：`US_MARKET_CALENDAR = "XNYS"`
+   - 用 `SimBroker(fee_model=..., slippage_model=..., fill_price_mode=FillPriceMode.NEXT_OPEN, market_calendar=US_MARKET_CALENDAR)` 模拟实盘
    - 调用 `plot_sim_vs_live()` 画回测 vs 模拟实盘的净值对比图
    - 打印执行落差（implementation shortfall）
    - 将模拟结果赋给 `result_live`（供 Step 4 使用）
