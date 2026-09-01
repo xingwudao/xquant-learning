@@ -2,6 +2,15 @@
 
 《XQuant：人人都是量化交易员》课程配套的 Specs 与 Notebooks 开源仓库。
 
+## 配套书稿
+
+本仓库是《XQuant：人人都是量化交易员》的配套练习仓库。
+
+如果你正在寻找量化交易入门、量化交易自学或 Python 量化回测教程，
+请先阅读主书稿：
+
+[人人都是量化交易员：XQuant Beginner 量化交易入门](https://github.com/xingwudao/xquant-beginner)
+
 ## 这是什么
 
 本仓库包含课程中每个章节的：
