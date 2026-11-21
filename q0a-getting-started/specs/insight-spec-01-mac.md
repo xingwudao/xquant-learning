@@ -140,7 +140,7 @@ uv pip install "open-xquant @ git+https://github.com/xingwudao/open-xquant.git@v
 - 检查 Python >= 3.12
 - 检查虚拟环境已激活
 - 检查 7 个依赖包导入：jupyter, pandas, numpy, matplotlib, akshare, yfinance, oxq
-- 调用 akshare.fund_etf_hist_em(symbol="510300", period="daily", adjust="qfq") 验证数据源连通
+- 调用 akshare.stock_zh_index_daily(symbol="sh000300") 验证数据源连通
 - 全绿输出 `结果: N/N 全部通过!` 退出码 0；否则退出码 1
 ```
 
@@ -171,5 +171,5 @@ spec 体量降一半，脚本独立维护，跨平台一份脚本服两端。
 
 - **【教学场景】环境配置类 spec 的特殊性**：与 q1 起的"任务执行类 spec"不同，环境配置类 spec 没有 notebook 产物可对照、没有图表可肉眼判断、错误隐式后传。**oracle 必须是机械可执行的检查脚本**——这是该类 spec 与其他类 spec 最大的差异，方法章节必须单列"环境/配置类 spec 写法"小节
 - **【教学场景】跨平台 spec 的对称性硬约束**：mac/Windows 双支持是本课程硬约束。两份 spec 步骤命名、检查项、退出条件必须**字面对称**，差异只能在"具体命令"层。两份不一致本身就是教学反例——学员第一次看到课程的双平台 spec，对称破缺会让其失去"两份 spec 是同一任务"的心智模型。方法章节应给"对称性 checklist"
-- **【教学场景】"门槛 spec"的失败放大效应**：本份 spec 是后续 35 份 spec 的前置依赖。这里 1 个静默失败 = 后续 35 份课程的体验崩塌。门槛 spec 的【验证】权重应高于其他 spec，方法章节应承认这种"位置敏感性"——不是所有 spec 都同等重要
+- **【教学场景】"门槛 spec"的失败放大效应**：本份 spec 是后续 34 份 spec 的前置依赖。这里 1 个静默失败 = 后续 34 份实验的体验崩塌。门槛 spec 的【验证】权重应高于其他 spec，方法章节应承认这种"位置敏感性"——不是所有 spec 都同等重要
 - **【教学场景】uv / Python 3.12 是项目硬约定**：spec 写作指南里明确写死"uv + Python 3.12"。本份 spec 必须严格遵守，不能"偶尔用 conda 也行"留口子——版本号、工具名、命令字面级精确，是【精确】原则在环境类 spec 的最强落点
